@@ -1,0 +1,11 @@
+%% -*-erlang-*-   ; 
+{release,
+ {"nodefinder_ec2", ""},
+ {erts, "%ERTS_VSN%"},
+ [{kernel, "%KERNEL_VSN%"},
+  {stdlib, "%STDLIB_VSN%"},
+  {sasl, "%SASL_VSN%"},
+  {inets, "%INETS_VSN%"},
+  {crypto, "%CRYPTO_VSN%"},
+  {nodefinder_ec2, "%VSN%"}]
+}.

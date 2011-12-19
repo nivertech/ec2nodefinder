@@ -1,0 +1,19 @@
+%%% -*- mode: erlang -*-
+
+{application, nodefinder_ec2, 
+[
+	{description, "Node Finder for Amazon EC2"}, 
+	{vsn, "1.0"}, 
+	{modules, []},
+	{registered, [nodefinder_ec2_srv]}, 
+	{applications, [kernel,stdlib, inets, crypto]}, 
+	{mod, {nodefinder_ec2_app,[]}},
+	{start_phases, []},
+	{env, [
+            {ping_timeout_sec, 10},
+            {endpoint, "ec2.amazonaws.com"}
+%            {access, "your-aki-goes-here"},
+%            {secret, "your-sak-goes-here"}
+          ]}
+]}.
+

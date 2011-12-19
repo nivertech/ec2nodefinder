@@ -1,9 +1,12 @@
 -module(awssign).
 -author('eric@ohmforce.com').
--include_lib("xmerl/include/xmerl.hrl").
--export([sign_and_send/5, describe_instances/5]).
 
-sign_and_send(Params, Host,APIVersion, AccessKey, SecretKey)->
+-include_lib("xmerl/include/xmerl.hrl").
+
+-export([sign_and_send/5, 
+        describe_instances/5]).
+
+sign_and_send(Params, Host, APIVersion, AccessKey, SecretKey) ->
     SortedParams = sort([{"Timestamp", create_timestamp()},
                         {"SignatureVersion", "2"},
                         {"Version", APIVersion},
@@ -12,7 +15,7 @@ sign_and_send(Params, Host,APIVersion, AccessKey, SecretKey)->
                         |Params]),
     EncodedParams = lists:foldl(
         fun({K,V}, Acc)->
-            [url_encode(K) ++ "=" ++ url_encode(V)| Acc]
+            [url_encode(K) ++ "=" ++ url_encode(V) | Acc]
         end,[], SortedParams),
     QueryString = string:join(EncodedParams, "&"),
     ToSign = "GET\n" ++ Host ++ "\n/\n" ++ QueryString,
@@ -21,9 +24,9 @@ sign_and_send(Params, Host,APIVersion, AccessKey, SecretKey)->
             base64:encode(crypto:sha_mac(SecretKey, ToSign)))
         ),
     URL = "http://"++ Host ++ "/?" ++ QueryString ++ "&Signature=" ++ Signature,
-    case http:request(URL) of
+    case httpc:request(URL) of
         {ok, {{_Version, 200, _ReasonPhrase}, _Headers, Body}} -> {ok, Body};
-        {ok, {{_Version, Code, ReasonPhrase}, _Headers, _Body}} -> {error, {Code, ReasonPhrase} }
+        {ok, {{_Version, Code, ReasonPhrase}, _Headers, _Body}} -> {error, {Code, ReasonPhrase}}
     end.
 
 % lifted from http://code.google.com/p/erlawys/source/browse/trunk/src/aws_util.erl
@@ -68,6 +71,7 @@ old_integer_to_hex(I) when I<16 ->
 old_integer_to_hex(I) when I>=16 ->
     N = trunc(I/16),
     old_integer_to_hex(N) ++ old_integer_to_hex(I rem 16).
+    
 url_encode([H|T]) ->
     if
         H >= $a, $z >= H ->
@@ -86,6 +90,6 @@ url_encode([H|T]) ->
                     [$%, $0, X | url_encode(T)]
             end
      end;
-
 url_encode([]) ->
     [].
+
