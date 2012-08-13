@@ -6,7 +6,7 @@
 	{vsn, "1.0"}, 
 	{modules, []},
 	{registered, [nodefinder_ec2_srv]}, 
-	{applications, [kernel,stdlib, inets, crypto]}, 
+	{applications, [kernel,stdlib, inets, crypto, xmerl]}, 
 	{mod, {nodefinder_ec2_app,[]}},
 	{start_phases, []},
 	{env, [
