@@ -46,8 +46,19 @@ start(_Type, _Args) ->
                 _       -> first_security_group()
             end,
     {ok, PingTimeoutSec} = application:get_env(?APPLICATION, ping_timeout_sec),
-    AKI = get_p(access, "AWS_ACCESS_KEY_ID"),
-    SAK = get_p(secret, "AWS_SECRET_ACCESS_KEY"),
+    AKI =   case get_p(access, "AWS_ACCESS_KEY") of
+                false -> 
+                    get_p(access, "AWS_ACCESS_KEY_ID");
+                AccessKey ->
+                    AccessKey
+            end,
+    SAK =   case get_p(secret, "AWS_SECRET_KEY") of
+                false ->
+                    get_p(secret, "AWS_SECRET_ACCESS_KEY");
+                SecretKey ->
+                    SecretKey
+            end,
+
     nodefinder_ec2_sup:start_link(  Group,
                                     PingTimeoutSec*1000,
                                     AKI,

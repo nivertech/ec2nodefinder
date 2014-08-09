@@ -21,7 +21,9 @@ sign_and_send(Params, Host, APIVersion, AccessKey, SecretKey) ->
     ToSign = "GET\n" ++ Host ++ "\n/\n" ++ QueryString,
     Signature = url_encode(
         binary_to_list(
-            base64:encode(crypto:sha_mac(SecretKey, ToSign)))
+            % src/awssign.erl:24: Warning: crypto:sha_mac/2 is deprecated and will be removed in in a future release; use crypto:hmac/3
+            %base64:encode(crypto:sha_mac(SecretKey, ToSign)))
+            base64:encode(crypto:hmac(sha, SecretKey, ToSign)))
         ),
     URL = "http://"++ Host ++ "/?" ++ QueryString ++ "&Signature=" ++ Signature,
     case httpc:request(URL) of
