@@ -48,6 +48,7 @@ describe_instances(SecurityGroup, Host,APIVersion, AccessKey, SecretKey)->
     Res = sign_and_send(Params, Host, APIVersion, AccessKey, SecretKey),
     case Res of
         {ok, XML} ->
+            io:format("~p~n", [XML]),
             {R,_} = xmerl_scan:string(XML),
             [ V#xmlText.value
                 || V<- xmerl_xpath:string("/DescribeInstancesResponse/reservationSet/item[ groupSet/item/groupId = \""
