@@ -4,17 +4,17 @@
 
 -behaviour(supervisor).
 
--export([ start_link/4, init/1 ]).
+-export([ start_link/5, init/1 ]).
 
 %-=====================================================================-
 %-                                Public                               -
 %-=====================================================================-
 
-start_link (Group, PingTimeout, Access, Secret) ->
+start_link(Group, Keypair, PingTimeout, Access, Secret) ->
   supervisor:start_link(?MODULE, 
-     [ Group, PingTimeout, Access, Secret ]).
+     [Group, Keypair, PingTimeout, Access, Secret]).
 
-init ([ Group, PingTimeout, Access, Secret ]) ->
+init([Group, Keypair, PingTimeout, Access, Secret]) ->
 
 	Server = nodefinder_ec2_srv,
   { ok,
@@ -22,7 +22,7 @@ init ([ Group, PingTimeout, Access, Secret ]) ->
       [ { Server,
           { Server, 
             start_link,
-            [ Group, PingTimeout, Access, Secret ] },
+            [Group, Keypair, PingTimeout, Access, Secret] },
           permanent,
           10000,
           worker,
