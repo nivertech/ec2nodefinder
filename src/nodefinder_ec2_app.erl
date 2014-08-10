@@ -8,6 +8,7 @@
 -export([
     discover/0,
     first_security_group/0,
+    first_keypair/0,
     start/0,
     start/2,
     stop/0,
@@ -42,8 +43,16 @@ start() ->
 %% @hidden
 start(_Type, _Args) ->
     Group = case application:get_env(?APPLICATION, group) of
-                {ok, G} -> G;
-                _       -> first_security_group()
+                {ok, G} -> 
+                    G;
+                _       -> 
+                    first_security_group()
+            end,
+    Keypair = case application:get_env(?APPLICATION, keypair) of
+                {ok, K} -> 
+                    K;
+                _       -> 
+                    first_keypair()
             end,
     {ok, PingTimeoutSec} = application:get_env(?APPLICATION, ping_timeout_sec),
     AKI =   case get_p(access, "AWS_ACCESS_KEY") of
@@ -60,6 +69,7 @@ start(_Type, _Args) ->
             end,
 
     nodefinder_ec2_sup:start_link(  Group,
+                                    Keypair,
                                     PingTimeoutSec*1000,
                                     AKI,
                                     SAK).
@@ -109,3 +119,20 @@ first_security_group() ->
             "default"
     end.
 
+%%------------------------------------------------------------------------------
+%% @doc get first EC2 keypair
+%% @end
+%%------------------------------------------------------------------------------
+% curl -s http://169.254.169.254/latest/meta-data/public-keys/
+% 0=kl-nivertech
+-spec first_keypair() -> string().    
+first_keypair() ->
+    Url = "http://169.254.169.254/latest/meta-data/public-keys/",
+    case httpc:request(Url) of
+        {ok, {{_HttpVersion, 200, _Reason}, _Headers, Body}} ->
+            % TODO - support multiple keys
+            string:sub_string(Body, string:chr(Body, $=)+1, string:chr(Body, $\n)-1);
+        _BadResult ->
+            %erlang:error({ http_request_failed, Url, BadResult })
+            "default"
+    end.

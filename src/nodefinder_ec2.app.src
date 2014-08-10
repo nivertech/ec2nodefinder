@@ -10,10 +10,11 @@
 	{mod, {nodefinder_ec2_app,[]}},
 	{start_phases, []},
 	{env, [
-            {ping_timeout_sec, 30},
-            {endpoint, "ec2.amazonaws.com"}
-%            {access, "your-aki-goes-here"},
-%            {secret, "your-sak-goes-here"}
+            {ping_timeout_sec, 10},
+            {endpoint, "ec2.amazonaws.com"} % TODO - use aws region
+            %{group, "default"},
+            %{keypair, ""}
+			%{access, "your-aki-goes-here"},
+			%{secret, "your-sak-goes-here"}
           ]}
 ]}.
-

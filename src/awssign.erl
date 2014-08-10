@@ -3,8 +3,12 @@
 
 -include_lib("xmerl/include/xmerl.hrl").
 
--export([sign_and_send/5, 
-        describe_instances/5]).
+-export([
+    sign_and_send/5, 
+    describe_instances_all/4,
+    describe_instances_by_securitygroup/5,
+    describe_instances_by_keypair/5
+]).
 
 sign_and_send(Params, Host, APIVersion, AccessKey, SecretKey) ->
     SortedParams = sort([{"Timestamp", create_timestamp()},
@@ -42,40 +46,38 @@ to_str(L) -> add_zeros(integer_to_list(L)).
     
 sort(Params)->
     lists:sort(fun({A, _}, {X, _}) -> A > X end, Params).
-    
-% describe_instances(SecurityGroup, Host, APIVersion, AccessKey, SecretKey)->
-%     Params =[ {"Action", "DescribeInstances"}],
-%     Res = sign_and_send(Params, Host, APIVersion, AccessKey, SecretKey),
-%     case Res of
-%         {ok, XML} ->
-%             io:format("~n~s~n", [XML]),
-%             {R,_} = xmerl_scan:string(XML),
-%             io:format("~n~p~n", [R]),
-%             [ V#xmlText.value
-%                 || V <- xmerl_xpath:string(
-%                     "/DescribeInstancesResponse/reservationSet/item[ groupSet/item/groupId = \""
-%                     ++ SecurityGroup ++ 
-%                     "\"]/instancesSet/item/privateDnsName/text()", R)];
-%         {error, E} ->
-%             erlang:error ({ describe_instances_failed, E }),
-%             []
-%     end.
 
-describe_instances(SecurityGroup, Host, APIVersion, AccessKey, SecretKey)->
+describe_instances_all(Host, APIVersion, AccessKey, SecretKey)->
+    XPathQuery = "/DescribeInstancesResponse/reservationSet/item/instancesSet/item/privateDnsName/text()",
+    describe_instances(XPathQuery, Host, APIVersion, AccessKey, SecretKey).
+    
+describe_instances_by_securitygroup(SecurityGroup, Host, APIVersion, AccessKey, SecretKey)->
+    XPathQuery =    "/DescribeInstancesResponse/reservationSet/item[ groupSet/item/groupId = \""
+                    ++ SecurityGroup ++ 
+                    "\"]/instancesSet/item/privateDnsName/text()",
+    describe_instances(XPathQuery, Host, APIVersion, AccessKey, SecretKey).
+
+describe_instances_by_keypair(KeyPair, Host, APIVersion, AccessKey, SecretKey)->
+    XPathQuery =    "/DescribeInstancesResponse/reservationSet/item/instancesSet/item[keyName = \""
+                    ++ KeyPair ++
+                    "\"]/privateDnsName/text()",
+    describe_instances(XPathQuery, Host, APIVersion, AccessKey, SecretKey).    
+
+describe_instances(XPathQuery, Host, APIVersion, AccessKey, SecretKey) ->
     Params =[ {"Action", "DescribeInstances"}],
     Res = sign_and_send(Params, Host, APIVersion, AccessKey, SecretKey),
-    case Res of
+    Hosts = case Res of
         {ok, XML} ->
-            io:format("~n~s~n", [XML]),
+            %io:format("~n~s~n", [XML]),
             {R,_} = xmerl_scan:string(XML),
-            io:format("~n~p~n", [R]),
-            [ V#xmlText.value
-                || V <- xmerl_xpath:string(
-                    "/DescribeInstancesResponse/reservationSet/item/instancesSet/item/privateDnsName/text()", R)];
+            %io:format("~n~p~n", [R]),
+            [ V#xmlText.value || V <- xmerl_xpath:string(XPathQuery, R) ];
         {error, E} ->
             erlang:error ({ describe_instances_failed, E }),
             []
-    end.
+    end,
+    io:format("Hosts = ~p~n", [Hosts]),
+    Hosts.
 
 % lifted from the ever precious yaws_utils.erl    
 integer_to_hex(I) ->

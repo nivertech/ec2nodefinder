@@ -7,23 +7,29 @@
 -behaviour(gen_server).
 
 % API
--export ([start_link/4,
-          discover/0 ]).
+-export ([
+    start_link/5,
+    discover/0 
+]).
          
 % gen_server callbacks
--export ([ init/1,
-           handle_call/3,
-           handle_cast/2,
-           handle_info/2,
-           terminate/2,
-           code_change/3]).
+-export ([
+    init/1,
+    handle_call/3,
+    handle_cast/2,
+    handle_info/2,
+    terminate/2,
+    code_change/3
+]).
 
 -define(APPLICATION, nodefinder_ec2).
 
--record (state, { group,
-                  ping_timeout,
-                  access,
-                  secret
+-record (state, { 
+    group,
+    keypair,
+    ping_timeout,
+    access,
+    secret
 }).
 
 -define(APIVERSION, "2008-12-01").
@@ -32,16 +38,18 @@
 %-                                Public                               -
 %-=====================================================================-
 
-start_link(Group, PingTimeout, Access, Secret)
+start_link(Group, Keypair, PingTimeout, Access, Secret)
     when is_list(Group),
-        is_integer(PingTimeout),
-        is_list(Access),
-        is_list(Secret) 
+         is_list(Keypair),
+         is_integer(PingTimeout),
+         is_list(Access),
+         is_list(Secret) 
     ->
-    gen_server:start_link ({ local, ?MODULE }, 
-         ?MODULE, 
-         [ Group, PingTimeout, Access, Secret ], 
-         []).
+    gen_server:start_link(
+        { local, ?MODULE }, 
+        ?MODULE, 
+        [Group, Keypair, PingTimeout, Access, Secret], 
+        []).
 
 % TODO
 % start_link(Group, PingTimeout, error, error) 
@@ -60,14 +68,15 @@ discover() ->
 %-                         gen_server callbacks                        -
 %-=====================================================================-
 
-init ([ Group, PingTimeout, Access, Secret  ]) ->
+init([Group, Keypair, PingTimeout, Access, Secret]) ->
     pong = net_adm:ping(node()), % don't startup unless distributed
-    process_flag (trap_exit, true),
+    process_flag(trap_exit, true),
     State = #state{
-                group = Group,
-                ping_timeout = PingTimeout,
-                access = Access,
-                secret = Secret
+                group           = Group,
+                keypair         = Keypair,
+                ping_timeout    = PingTimeout,
+                access          = Access,
+                secret          = Secret
             },
     discover(State),
     {ok, State}.
@@ -107,6 +116,7 @@ collect(Key, Timeout) ->
 
 discover(State) ->
     Group     = State#state.group,
+    Keypair   = State#state.keypair,
     Timeout   = State#state.ping_timeout,
     Access    = State#state.access,
     Secret    = State#state.secret,
@@ -130,7 +140,7 @@ discover(State) ->
                             [ 
                                 {Host, start_names(Host, Timeout)} 
                                 || 
-                                Host <- awssign:describe_instances(Group, Endpoint, ?APIVERSION, Access, Secret) 
+                                Host <- awssign:describe_instances_by_keypair(Keypair, Endpoint, ?APIVERSION, Access, Secret) 
                             ] 
                     ],
                 { Name, _ } <- NamesAndPorts,
