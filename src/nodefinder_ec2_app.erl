@@ -131,7 +131,7 @@ first_keypair() ->
     case httpc:request(Url) of
         {ok, {{_HttpVersion, 200, _Reason}, _Headers, Body}} ->
             % TODO - support multiple keys
-            string:sub_string(Body, string:chr(Body, $=)+1, string:cspan(Body, "\n")-1);
+            string:sub_string(Body, string:chr(Body, $=)+1, string:cspan(Body, "\n"));
         _BadResult ->
             %erlang:error({ http_request_failed, Url, BadResult })
             "default"
