@@ -113,7 +113,7 @@ first_security_group() ->
     Url = "http://169.254.169.254/2007-08-29/meta-data/security-groups",
     case httpc:request(Url) of
         {ok, {{_HttpVersion, 200, _Reason}, _Headers, Body}} ->
-            string:substr(Body, 1, string:cspan (Body, "\n"));
+            string:substr(Body, 1, string:cspan(Body, "\n"));
         _BadResult ->
             %erlang:error({ http_request_failed, Url, BadResult })
             "default"
@@ -131,7 +131,7 @@ first_keypair() ->
     case httpc:request(Url) of
         {ok, {{_HttpVersion, 200, _Reason}, _Headers, Body}} ->
             % TODO - support multiple keys
-            string:sub_string(Body, string:chr(Body, $=)+1, string:chr(Body, $\n)-1);
+            string:sub_string(Body, string:chr(Body, $=)+1, string:cspan(Body, "\n")-1);
         _BadResult ->
             %erlang:error({ http_request_failed, Url, BadResult })
             "default"
