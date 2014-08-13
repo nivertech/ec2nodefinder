@@ -10,7 +10,7 @@
 	{mod, {nodefinder_ec2_app,[]}},
 	{start_phases, []},
 	{env, [
-            {ping_timeout_sec, 10},
+            {ping_timeout_sec, 3},
             {endpoint, "ec2.amazonaws.com"} % TODO - use aws region
             %{group, "default"},
             %{keypair, ""}
